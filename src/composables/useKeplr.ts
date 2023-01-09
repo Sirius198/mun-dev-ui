@@ -1,22 +1,22 @@
-import { OfflineDirectSigner } from '@cosmjs/proto-signing'
-import { Key } from '@keplr-wallet/types'
-import { computed, ComputedRef } from 'vue'
-import { Store } from 'vuex'
+import { OfflineDirectSigner } from "@cosmjs/proto-signing";
+import { Key } from "@keplr-wallet/types";
+import { computed, ComputedRef } from "vue";
+import { Store } from "vuex";
 
-import { Amount, AmountWithMeta } from '../utils/interfaces'
+import { Amount, AmountWithMeta } from "../utils/interfaces";
 
 type Response = {
-  connectToKeplr: (onSuccessCb: () => void, onErrorCb: () => void) => void
-  isKeplrAvailable: ComputedRef<boolean>
-  getOfflineSigner: (chainId: string) => OfflineDirectSigner
-  getKeplrAccParams: (chainId: string) => Promise<Key>
-  listenToAccChange: (cb: EventListener) => void
-}
+  connectToKeplr: (onSuccessCb: () => void, onErrorCb: () => void) => void;
+  isKeplrAvailable: ComputedRef<boolean>;
+  getOfflineSigner: (chainId: string) => OfflineDirectSigner;
+  getKeplrAccParams: (chainId: string) => Promise<Key>;
+  listenToAccChange: (cb: EventListener) => void;
+};
 
 type Params = {
-  $s: Store<any>
-  opts?: any
-}
+  $s: Store<any>;
+  opts?: any;
+};
 
 export default function ({ $s }: Params): Response {
   let connectToKeplr = async (
@@ -24,74 +24,76 @@ export default function ({ $s }: Params): Response {
     onErrorCb: () => void
   ) => {
     try {
-      let features = ['no-legacy-stdTx']
+      let features = ["no-legacy-stdTx"];
 
-      let staking = $s.getters['cosmos.staking.v1beta1/getParams']()
-      let tokens = $s.getters['cosmos.bank.v1beta1/getTotalSupply']()
-      let chainId = $s.getters['common/env/chainId']
-      let chainName = $s.getters['common/env/chainName']
-      let rpc = $s.getters['common/env/apiTendermint']
-      let rest = $s.getters['common/env/apiCosmos']
-      let addrPrefix = $s.getters['common/env/addrPrefix']
+      let staking = $s.getters["cosmos.staking.v1beta1/getParams"]();
+      let tokens = $s.getters["cosmos.bank.v1beta1/getTotalSupply"]();
+      let chainId = $s.getters["common/env/chainId"];
+      let chainName = $s.getters["common/env/chainName"];
+      let rpc = $s.getters["common/env/apiTendermint"];
+      let rest = $s.getters["common/env/apiCosmos"];
+      let addrPrefix = $s.getters["common/env/addrPrefix"];
 
-      let coinDenom = $s.getters['common/env/coinDenom']
-      let coinDenomMin = $s.getters['common/env/coinDenomMin']
-      let coinDenomMinDecimal = $s.getters['common/env/coinDenomMinDecimal']
+      let coinDenom = $s.getters["common/env/coinDenom"];
+      let coinDenomMin = $s.getters["common/env/coinDenomMin"];
+      let coinDenomMinDecimal: number = Number(
+        $s.getters["common/env/coinDenomMinDecimal"]
+      );
 
       let stakeCurrency = {
         coinDenom: coinDenom,
         coinMinimalDenom: coinDenomMin,
-        coinDecimals: coinDenomMinDecimal
-      }
+        coinDecimals: coinDenomMinDecimal,
+      };
 
       let bip44 = {
-        coinType: 118
-      }
+        coinType: 118,
+      };
 
       let bech32Config = {
         bech32PrefixAccAddr: addrPrefix,
-        bech32PrefixAccPub: addrPrefix + 'pub',
-        bech32PrefixValAddr: addrPrefix + 'valoper',
-        bech32PrefixValPub: addrPrefix + 'valoperpub',
-        bech32PrefixConsAddr: addrPrefix + 'valcons',
-        bech32PrefixConsPub: addrPrefix + 'valconspub'
-      }
+        bech32PrefixAccPub: addrPrefix + "pub",
+        bech32PrefixValAddr: addrPrefix + "valoper",
+        bech32PrefixValPub: addrPrefix + "valoperpub",
+        bech32PrefixConsAddr: addrPrefix + "valcons",
+        bech32PrefixConsPub: addrPrefix + "valconspub",
+      };
 
       let currencies = tokens.supply.map((x: Amount) => {
         const y: AmountWithMeta = {
-          amount: '0',
-          denom: '',
-          coinDenom: '',
-          coinMinimalDenom: '',
-          coinDecimals: 0
-        }
-        y.coinDenom = coinDenom
-        y.coinMinimalDenom = coinDenomMin
-        y.coinDecimals = coinDenomMinDecimal
-        return y
-      })
+          amount: "0",
+          denom: "",
+          coinDenom: "",
+          coinMinimalDenom: "",
+          coinDecimals: 0,
+        };
+        y.coinDenom = coinDenom;
+        y.coinMinimalDenom = coinDenomMin;
+        y.coinDecimals = coinDenomMinDecimal;
+        return y;
+      });
 
       let feeCurrencies = tokens.supply.map((x: Amount) => {
         const y: AmountWithMeta = {
-          amount: '0',
-          denom: '',
-          coinDenom: '',
-          coinMinimalDenom: '',
-          coinDecimals: 0
-        }
-        y.coinDenom = coinDenom
-        y.coinMinimalDenom = coinDenomMin
-        y.coinDecimals = coinDenomMinDecimal
-        return y
-      })
+          amount: "0",
+          denom: "",
+          coinDenom: "",
+          coinMinimalDenom: "",
+          coinDecimals: 0,
+        };
+        y.coinDenom = coinDenom;
+        y.coinMinimalDenom = coinDenomMin;
+        y.coinDecimals = coinDenomMinDecimal;
+        return y;
+      });
 
-      let coinType = 118
+      let coinType = 118;
 
       let gasPriceStep = {
         low: 0.0,
         average: 0.025,
-        high: 0.04
-      }
+        high: 0.04,
+      };
 
       if (chainId) {
         await window.keplr.experimentalSuggestChain({
@@ -106,47 +108,47 @@ export default function ({ $s }: Params): Response {
           currencies,
           feeCurrencies,
           coinType,
-          gasPriceStep
-        })
+          gasPriceStep,
+        });
 
         window.keplr.defaultOptions = {
           sign: {
             preferNoSetFee: true,
-            preferNoSetMemo: true
-          }
-        }
+            preferNoSetMemo: true,
+          },
+        };
 
-        await window.keplr.enable(chainId)
-        onSuccessCb()
+        await window.keplr.enable(chainId);
+        onSuccessCb();
       } else {
-        console.error('Cannot access chain data from vuex store')
-        onErrorCb()
+        console.error("Cannot access chain data from vuex store");
+        onErrorCb();
       }
     } catch (e) {
-      console.error(e)
-      onErrorCb()
+      console.error(e);
+      onErrorCb();
     }
-  }
+  };
 
   let isKeplrAvailable = computed<boolean>(() => {
-    return !!window.keplr
-  })
+    return !!window.keplr;
+  });
 
   let getOfflineSigner = (chainId: string) =>
-    window.keplr.getOfflineSigner(chainId)
+    window.keplr.getOfflineSigner(chainId);
 
   let getKeplrAccParams = async (chainId: string) =>
-    await window.keplr.getKey(chainId)
+    await window.keplr.getKey(chainId);
 
   let listenToAccChange = (cb: EventListener) => {
-    window.addEventListener('keplr_keystorechange', cb)
-  }
+    window.addEventListener("keplr_keystorechange", cb);
+  };
 
   return {
     connectToKeplr,
     isKeplrAvailable,
     getOfflineSigner,
     getKeplrAccParams,
-    listenToAccChange
-  }
+    listenToAccChange,
+  };
 }
