@@ -34,7 +34,7 @@ export default {
 
     // state
     let navbarLinks = [
-      { name: "AirdropData", url: "/airdrop" },
+      { name: "Airdrop", url: "/airdrop" },
       // { name: 'CoinData', url: '/coin' },
       // { name: 'TokenData', url: '/token' },
       { name: "Staking", url: "/staking" },
